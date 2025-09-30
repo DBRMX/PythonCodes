@@ -1,0 +1,124 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import random
+
+#Contadores globales para las comparaciones
+quicksort_comparisons = 0
+heapsort_comparisons = 0
+
+#---> Implementación de Quicksort con conteo <---
+
+def partition(arr, low, high):
+    """
+    Función de partición para Quicksort.
+    Cada vez que se compara un elemento con el 'pivote', se incrementa el contador
+    """
+    global quicksort_comparisons
+    pivot = arr[high]
+    i = low - 1
+    for j in range(low, high):
+        #Comparación clave en Quicksort
+        quicksort_comparisons += 1
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    return i + 1
+
+def quicksort_recursive(arr, low, high):
+    """Función recursiva principal de Quicksort"""
+    if low < high:
+        pi = partition(arr, low, high)
+        quicksort_recursive(arr, low, pi - 1)
+        quicksort_recursive(arr, pi + 1, high)
+
+def run_quicksort(arr):
+    """Ejecuta Quicksort y devuelve el número de comparaciones"""
+    global quicksort_comparisons
+    quicksort_comparisons = 0
+    arr_copy = arr.copy() #Usar copia para no alterar original
+    quicksort_recursive(arr_copy, 0, len(arr_copy) - 1)
+    return quicksort_comparisons
+
+# --- Implementación de Heapsort con conteo ---
+
+def heapify(arr, n, i):
+    """
+    Función para mantener la propiedad del max-heap.
+    Las comparaciones se cuentan al buscar el nodo más grande entre el padre y sus hijos.
+    """
+    global heapsort_comparisons
+    largest = i
+    left = 2 * i + 1
+    right = 2 * i + 2
+
+    # Comparar padre con hijo izquierdo
+    if left < n:
+        heapsort_comparisons += 1
+        if arr[left] > arr[largest]:
+            largest = left
+
+    # Comparar el 'más grande' actual con el hijo derecho
+    if right < n:
+        heapsort_comparisons += 1
+        if arr[right] > arr[largest]:
+            largest = right
+
+    # Si el nodo más grande no es la raíz, intercambiar y seguir "heapifying"
+    if largest != i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        heapify(arr, n, largest)
+
+def run_heapsort(arr):
+    """Ejecuta Heapsort y devuelve el número de comparaciones."""
+    global heapsort_comparisons
+    heapsort_comparisons = 0
+    arr_copy = arr.copy()
+    n = len(arr_copy)
+
+    # Construir un max-heap (se llama a heapify)
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(arr_copy, n, i)
+
+    # Extraer elementos uno por uno del heap (se llama a heapify)
+    for i in range(n - 1, 0, -1):
+        arr_copy[i], arr_copy[0] = arr_copy[0], arr_copy[i]
+        heapify(arr_copy, i, 0)
+        
+    return heapsort_comparisons
+
+# --- Experimento y Graficación ---
+
+# Definir los tamaños de arreglos a probar (de 10 a 500, en pasos de 10)
+array_sizes = range(10, 501, 10)
+quicksort_results = []
+heapsort_results = []
+
+print("Ejecutando simulación...")
+for size in array_sizes:
+    # Crear un arreglo con números aleatorios para cada tamaño
+    random_array = [random.randint(0, 1000) for _ in range(size)]
+    
+    # Ejecutar cada algoritmo y almacenar el número de comparaciones
+    quicksort_results.append(run_quicksort(random_array))
+    heapsort_results.append(run_heapsort(random_array))
+print("Simulación completada.")
+
+# --- Código para generar la gráfica ---
+plt.style.use('seaborn-v0_8-whitegrid')
+plt.figure(figsize=(12, 7))
+
+plt.plot(array_sizes, quicksort_results, label='Quicksort', color='blue', marker='o')
+plt.plot(array_sizes, heapsort_results, label='Heapsort', color='red', marker='x')
+
+# Añadir títulos y etiquetas para claridad
+plt.title('Comparación de Eficiencia: Quicksort vs. Heapsort', fontsize=16)
+plt.xlabel('Tamaño del Arreglo', fontsize=12)
+plt.ylabel('Número de Comparaciones', fontsize=12)
+plt.legend(fontsize=12)
+plt.grid(True)
+plt.tight_layout()
+
+# Guardar la gráfica en un archivo y mostrar mensaje de confirmación
+plt.savefig('comparacion_quicksort_heapsort.png')
+print("La gráfica 'comparacion_quicksort_heapsort.png' ha sido generada.")
